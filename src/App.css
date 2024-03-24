@@ -1,0 +1,71 @@
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-header select, 
+.App-header input[type="file"] {
+  margin: 20px 0;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.App-header button {
+  cursor: pointer;
+  background-color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.App-header button:hover {
+  background-color: #e2eaeb;
+}
+
+.App-header label[for="file-input"] {
+  cursor: pointer;
+  background-color:#e2eaeb;;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+}
+
+.App-header label[for="file-input"]:hover {
+  background-color: #e2eaeb;
+}
+
+.extracted-text {
+  text-align: left;
+  max-width: 80%;
+  margin-top: 20px;
+  word-break: break-word;
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.extracted-text p {
+  margin: 0;
+  color: #333;
+}
+
+.extracted-text strong {
+  color: #000;
+}
