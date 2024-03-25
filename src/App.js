@@ -14,6 +14,32 @@ async function extractTextItems(page) {
   }));
 }
 
+
+function groupItemsByWrapped(items) {
+  const wrappedItems = [];
+  let previousItem = null;
+
+  items.forEach((item, index) => {
+    // Skip merging for empty text, but still add it to the result as it might be needed for spacing
+    if (item.text.trim() === '') {
+      wrappedItems.push(item);
+      return;
+    }
+
+    // If there's a previous item with the same x position, merge this item's text with the previous one
+    if (previousItem && item.x === previousItem.x) {
+      previousItem.text += ` ${item.text}`; // Add a space between merged texts
+      // Do not push the current item to wrappedItems as its text is already added to the previousItem
+    } else {
+      // If it doesn't match the merge condition, just push it to the result
+      wrappedItems.push(item);
+      previousItem = item; // Update the previousItem to the current one for the next iteration
+    }
+  });
+
+  return wrappedItems;
+}
+
 function groupItemsByLines(items) {
   const grouped = [];
   items.forEach(item => {
@@ -59,6 +85,7 @@ function App() {
   const [text, setText] = useState('');
   const [selectedConfig, setSelectedConfig] = useState("Endowus");
   const [fileName, setFileName] = useState('');
+  const [extractedHoldings, setExtractedHoldings] = useState([]);
 
   async function extractTextFromPdf(file) {
     const config = masterConfigs[selectedConfig];
@@ -73,13 +100,13 @@ function App() {
       reader.onload = async (e) => {
         const typedarray = new Uint8Array(e.target.result);
         const pdfDoc = await pdfjsLib.getDocument({data: typedarray}).promise;
-        let allExtractedFundNames = [];
+        let extractedHoldings = [];
 
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           const page = await pdfDoc.getPage(pageNum);
           const items = await extractTextItems(page);
-          const lines = groupItemsByLines(items);
-
+          const wrappedItems = groupItemsByWrapped(items); 
+          const lines = groupItemsByLines(wrappedItems);
           let extracting = false;
           let headerXPosition = null;
 
@@ -106,17 +133,17 @@ function App() {
             if (extracting && headerXPosition !== null) {
               for (const item of line.items) {
                 const { text, x } = item;
-                console.log(item)
                 if (Math.abs(x - headerXPosition) < 5) {
-                  console.log(text, headerXPosition, x)
-                  allExtractedFundNames.push(text);
+                  extractedHoldings.push(text);
                 }
               }
             }
           }
         }
-
-        setText(allExtractedFundNames.join(", "));
+    
+      const uniqueHoldings = extractedHoldings.filter((name, index, self) => name.trim() !== '' && self.indexOf(name) === index);
+      setExtractedHoldings(uniqueHoldings);    
+      console.log(uniqueHoldings)
       };
 
       reader.readAsArrayBuffer(file);
@@ -129,9 +156,9 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <div>
+        <div className="config-selector">
           <label htmlFor="config-selector">Select Configuration:</label>
-          <br />
+          <span />
           <select
             id="config-selector"
             onChange={(e) => setSelectedConfig(e.target.value)}
@@ -142,42 +169,43 @@ function App() {
             ))}
           </select>
         </div>
-        <div>
-        <input
-  type="file"
-  accept="application/pdf"
-  id="file-input"
-  style={{ display: 'none' }}
-  onChange={(e) => {
-    if (e.target.files[0]) {
-      setFileName(e.target.files[0].name); // Update the file name
-      // Assuming you move the extractTextFromPdf call here or handle it separately as needed
-    } else {
-      setFileName(''); // Reset the file name if no file is selected
-    }
-  }}
-/>
-<label htmlFor="file-input" className="file-input-label">Choose PDF</label>
-{fileName && <div className="file-name-display">{fileName}</div>}
-
+        <div className="file-input-container">
+          <input
+            type="file"
+            accept="application/pdf"
+            id="file-input"
+            className="file-input"
+            onChange={(e) => {
+              if (e.target.files[0]) {
+                setFileName(e.target.files[0].name);
+              } else {
+                setFileName('');
+              }
+            }}
+          />
+          <label htmlFor="file-input" className="file-input-label">Choose PDF</label>
+          {fileName && <div className="file-name-display">{fileName}</div>}
         </div>
-        <button
-          onClick={() => {
-            const fileInput = document.getElementById('file-input');
-            if (fileInput && fileInput.files.length > 0) {
-              extractTextFromPdf(fileInput.files[0]);
-            }
-          }}
-        >
+        <button className="extract-button" onClick={() => {
+          const fileInput = document.getElementById('file-input');
+          if (fileInput && fileInput.files.length > 0) {
+            extractTextFromPdf(fileInput.files[0]);
+          }
+        }}>
           Extract Text
         </button>
         <div className="extracted-text">
           <strong>Extracted Fund Names:</strong>
-          <p>{text}</p>
+          {extractedHoldings.map((holding, index) => (
+            <div key={index}>{holding} <hr /> </div>
+            
+          ))}
         </div>
+        <p>{text}</p>
       </header>
     </div>
   );
+  
   
   
         }

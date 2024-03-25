@@ -10,7 +10,7 @@ const masterConfigs = {
     "SAXO": {
       triggerConfig: { phrases: ["Instrument"], key: "Instrument", rule: "all", caseSensitive: false, enforceOrder: false },
       stopConfig: { phrases: ["Total"], rule: "any", caseSensitive: false, enforceOrder: false }
-    }
+    } 
   };
   
   export default masterConfigs;
